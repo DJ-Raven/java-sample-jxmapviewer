@@ -1,5 +1,8 @@
 package test;
 
+import java.util.HashSet;
+import java.util.Set;
+import javax.swing.JOptionPane;
 import javax.swing.event.MouseInputListener;
 import org.jxmapviewer.OSMTileFactoryInfo;
 import org.jxmapviewer.VirtualEarthTileFactoryInfo;
@@ -8,8 +11,15 @@ import org.jxmapviewer.input.ZoomMouseWheelListenerCenter;
 import org.jxmapviewer.viewer.DefaultTileFactory;
 import org.jxmapviewer.viewer.GeoPosition;
 import org.jxmapviewer.viewer.TileFactoryInfo;
+import org.jxmapviewer.viewer.WaypointPainter;
+import waypoint.EventWaypoint;
+import waypoint.MyWaypoint;
+import waypoint.WaypointRender;
 
 public class Main extends javax.swing.JFrame {
+
+    private final Set<MyWaypoint> waypoints = new HashSet<>();
+    private EventWaypoint event;
 
     public Main() {
         initComponents();
@@ -29,6 +39,41 @@ public class Main extends javax.swing.JFrame {
         jXMapViewer.addMouseListener(mm);
         jXMapViewer.addMouseMotionListener(mm);
         jXMapViewer.addMouseWheelListener(new ZoomMouseWheelListenerCenter(jXMapViewer));
+        event = getEvent();
+    }
+
+    private void addWaypoint(MyWaypoint waypoint) {
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.remove(d.getButton());
+        }
+        waypoints.add(waypoint);
+        initWaypoint();
+    }
+
+    private void initWaypoint() {
+        WaypointPainter<MyWaypoint> wp = new WaypointRender();
+        wp.setWaypoints(waypoints);
+        jXMapViewer.setOverlayPainter(wp);
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.add(d.getButton());
+        }
+    }
+
+    private void clearWaypoint() {
+        for (MyWaypoint d : waypoints) {
+            jXMapViewer.remove(d.getButton());
+        }
+        waypoints.clear();
+        initWaypoint();
+    }
+
+    private EventWaypoint getEvent() {
+        return new EventWaypoint() {
+            @Override
+            public void selected(MyWaypoint waypoint) {
+                JOptionPane.showMessageDialog(Main.this, waypoint.getName());
+            }
+        };
     }
 
     @SuppressWarnings("unchecked")
@@ -37,6 +82,8 @@ public class Main extends javax.swing.JFrame {
 
         jXMapViewer = new org.jxmapviewer.JXMapViewer();
         comboMapType = new javax.swing.JComboBox<>();
+        cmdAdd = new javax.swing.JButton();
+        cmdClear = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -47,20 +94,42 @@ public class Main extends javax.swing.JFrame {
             }
         });
 
+        cmdAdd.setText("Add Waypoint");
+        cmdAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdAddActionPerformed(evt);
+            }
+        });
+
+        cmdClear.setText("Clear Waypoint");
+        cmdClear.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmdClearActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jXMapViewerLayout = new javax.swing.GroupLayout(jXMapViewer);
         jXMapViewer.setLayout(jXMapViewerLayout);
         jXMapViewerLayout.setHorizontalGroup(
             jXMapViewerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jXMapViewerLayout.createSequentialGroup()
-                .addContainerGap(992, Short.MAX_VALUE)
+                .addContainerGap()
+                .addComponent(cmdAdd)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cmdClear)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 767, Short.MAX_VALUE)
                 .addComponent(comboMapType, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
         jXMapViewerLayout.setVerticalGroup(
             jXMapViewerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jXMapViewerLayout.createSequentialGroup()
-                .addComponent(comboMapType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 640, Short.MAX_VALUE))
+                .addContainerGap()
+                .addGroup(jXMapViewerLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(comboMapType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cmdAdd)
+                    .addComponent(cmdClear))
+                .addContainerGap(632, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -68,16 +137,16 @@ public class Main extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(0, 0, 0)
                 .addComponent(jXMapViewer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(0, 0, 0)
                 .addComponent(jXMapViewer, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+                .addGap(0, 0, 0))
         );
 
         pack();
@@ -99,6 +168,15 @@ public class Main extends javax.swing.JFrame {
         DefaultTileFactory tileFactory = new DefaultTileFactory(info);
         jXMapViewer.setTileFactory(tileFactory);
     }//GEN-LAST:event_comboMapTypeActionPerformed
+
+    private void cmdAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdAddActionPerformed
+        addWaypoint(new MyWaypoint("Test 001", event, new GeoPosition(11.525000, 104.929033)));
+        addWaypoint(new MyWaypoint("Test 002", event, new GeoPosition(11.634007, 104.750676)));
+    }//GEN-LAST:event_cmdAddActionPerformed
+
+    private void cmdClearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmdClearActionPerformed
+        clearWaypoint();
+    }//GEN-LAST:event_cmdClearActionPerformed
 
     /**
      * @param args the command line arguments
@@ -136,6 +214,8 @@ public class Main extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton cmdAdd;
+    private javax.swing.JButton cmdClear;
     private javax.swing.JComboBox<String> comboMapType;
     private org.jxmapviewer.JXMapViewer jXMapViewer;
     // End of variables declaration//GEN-END:variables
